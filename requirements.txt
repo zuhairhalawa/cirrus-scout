@@ -1,0 +1,8 @@
+# Data pipeline, local server and tests
+numpy>=1.26,<2
+orjson>=3.10
+zstandard>=0.23
+pillow>=10.4
+scipy>=1.11
+contourpy>=1.2
+pytest>=8.0

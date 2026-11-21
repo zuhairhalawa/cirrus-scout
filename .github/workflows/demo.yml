@@ -1,0 +1,85 @@
+name: Hosted demo
+
+# Builds the hosted demo from the official GRID starter data and deploys it to GitHub Pages.
+# The data is fetched for the run and never stored in this repository: only the aggregate
+# export (statistics, charts and a few showcase rounds) is published, as the hackathon
+# organizers confirmed is permitted under section 4(b) of the data license.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scout/**'
+      - 'web/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - '.github/workflows/demo.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch the official GRID starter data (not stored in this repository)
+        run: git clone --depth 1 https://github.com/cloud9esports/stl-hackathon-2026-grid-starter.git ../stl-hackathon-2026-grid-starter
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install the pipeline
+        run: pip install -r requirements.txt
+
+      - name: Unit tests
+        run: python -m pytest tests/test_units.py
+
+      - name: Extract every series
+        run: python -m scout extract --workers 4
+
+      - name: Build the analysis store
+        run: python -m scout build
+
+      - name: Check the numbers against the data
+        run: python -m pytest
+
+      - name: Export the aggregate-only demo data
+        run: python -m scout export
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build the web app
+        run: |
+          cd web
+          npm ci
+          npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

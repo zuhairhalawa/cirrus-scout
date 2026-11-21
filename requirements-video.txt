@@ -1,0 +1,5 @@
+# Demo video pipeline (optional): python video/make_video.py
+# After installing, run once: python -m playwright install chromium
+playwright>=1.55
+edge-tts>=7.2
+imageio-ffmpeg>=0.6
