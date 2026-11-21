@@ -13,6 +13,8 @@ Every claim shows its sample size, how strong the evidence is, and the exact rou
 
 **Try it:** [zuhairhalawa.github.io/cirrus-scout](https://zuhairhalawa.github.io/cirrus-scout/) (hosted demo, aggregate statistics only)
 
+**Watch the 2-minute demo:** [youtu.be/7ClDxDkEFhc](https://youtu.be/7ClDxDkEFhc)
+
 ## What a coach gets
 
 - **Findings in plain language.** For example: "Killjoy Turret at B Kitchen: 45 of 84 defense rounds, placed by cortezia, buy phase", marked as strong evidence.
@@ -144,6 +146,8 @@ The GRID data is licensed only for this hackathon and must not be redistributed.
 - **Pre-commit guard:** `scripts/check_no_data.py` refuses to commit any of it. Install it with `python scripts/check_no_data.py --install`.
 
 ## Demo video
+
+Watch it on YouTube: [youtu.be/7ClDxDkEFhc](https://youtu.be/7ClDxDkEFhc)
 
 `video/make_video.py` produces the demo video from the running app:
 
