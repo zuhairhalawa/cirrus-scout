@@ -317,6 +317,14 @@ def storyboard(meta) -> list[Scene]:
     shear = next(h for h in sen_s["utility"]["hotspots"] if h["ability"] == "shear" and h["callout"] == "C Main")
     ctr = api("/api/counter", map="lotus", x=shear["x"], y=shear["y"], ability="shear")
     assert ctr["enough"], "the counter scene needs a spot with enough league rounds"
+    plan = sen_s["plan"]
+    n_hit = sum(1 for i in plan if i["advice"] == "hit")
+    n_flat = len({(i["agent"], i["ability_name"], i["callout"]) for i in plan if i["advice"] == "no_edge"})
+    assert n_hit and plan[0]["id"] == shear["id"], "the game plan scene needs the Shear as its first row"
+    words = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six"}
+    hit_line = f"{words.get(n_hit, n_hit)} {'is' if n_hit == 1 else 'are'} worth hitting early."
+    flat_line = (f" {words.get(n_flat, n_flat)} {'shows' if n_flat == 1 else 'show'} no reliable edge either way."
+                 if n_flat else "")
     c9s = api("/api/scout", team=c9, map="icebox", side="defense", since=since_for(meta, c9), phase="all")
     c9t = next(h for h in c9s["utility"]["hotspots"] if h["category"] == "trap")
     fp = c9s["setup"]
@@ -366,6 +374,11 @@ def storyboard(meta) -> list[Scene]:
         await page.locator(".counter-figure").wait_for(timeout=60000)
         await hover(page, page.locator(".counter-figure"), 1.0)
 
+    async def s_plan(page):
+        await label(page, "Game plan")
+        await hover(page, page.locator(".game-plan .finding"), 4.0)
+        await hover(page, page.locator(".game-plan .plan-note"), 2.0)
+
     async def s_mirror(page):
         await label(page, "Self-scout Cloud9")
         await hover(page, page.locator(".select"))
@@ -408,6 +421,8 @@ def storyboard(meta) -> list[Scene]:
               f"Across {ctr['rounds']} league rounds with that setup, attackers who hit it with utility in the first "
               f"{int(ctr['contest_before'])} seconds won {num(ctr['win_contested'])} percent. When they left it alone, they won "
               f"{num(ctr['win_uncontested'])} percent. {signal}", s_counter),
+        Scene("s4b", "", f"The game plan runs that test on every setup Sentinels repeat. {hit_line}{flat_line} "
+              "So a coach knows where to spend utility, and where not to.", s_plan),
         Scene("s5", "", f"And it works as a mirror. Cloud9's own turret sits at {c9t['callout']} in {c9t['p']} percent of "
               f"Icebox defense rounds. {fp['predictability']} percent of their trap placements land on a spot they reuse, "
               "shown here against every other team on the map.", s_mirror),
