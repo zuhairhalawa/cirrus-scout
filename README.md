@@ -15,6 +15,8 @@ Every claim shows its sample size, how strong the evidence is, and the exact rou
 
 **Watch the 2-minute demo:** [youtu.be/7ClDxDkEFhc](https://youtu.be/7ClDxDkEFhc)
 
+![Cirrus showing a league-wide counter test for a Vyse Shear at C Main on Lotus](docs/screenshots/counter.png)
+
 ## What a coach gets
 
 - **Findings in plain language.** For example: "Killjoy Turret at B Kitchen: 45 of 84 defense rounds, placed by cortezia, buy phase", marked as strong evidence.
