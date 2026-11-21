@@ -19,7 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-The GRID esports data used by this project is NOT covered by this license. It is
-proprietary, licensed only for the Sky's The Limit 2026 hackathon, and is not
-included in this repository. See https://github.com/cloud9esports/stl-hackathon-2026-grid-starter

@@ -176,6 +176,8 @@ How the work was split:
 
 Junie joined after the pipeline, the analysis and the web app were in place. Its work is the guidelines and the scouting brief; the four task files are the complete record of it.
 
+A longer account, including what went wrong and how it was caught, is in [docs/junie-case-study.md](docs/junie-case-study.md).
+
 ## Project layout
 
 | Path | What it is |
@@ -197,4 +199,4 @@ Junie joined after the pipeline, the analysis and the web app were in place. Its
 
 Match data is provided by GRID. VALORANT is a trademark of Riot Games, Inc. This project is not endorsed by Riot Games, GRID or Cloud9.
 
-Code: MIT. The GRID data is proprietary and not covered by this license.
+Code: MIT, see [LICENSE](LICENSE). The GRID data is proprietary and not covered by that license, see [NOTICE](NOTICE).
