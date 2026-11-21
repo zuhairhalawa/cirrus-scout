@@ -130,6 +130,39 @@ export interface Sample {
   low_rate_maps: number; median_moved_m: number | null; setup_moved_m: number | null; superseded: number
 }
 
+export interface PlanCounter {
+  rounds: number | null
+  contested_rounds: number | null
+  uncontested_rounds: number | null
+  won_contested: number | null
+  won_uncontested: number | null
+  win_contested: number | null
+  win_uncontested: number | null
+  delta: number | null
+  z: number | null
+  signal: 'clear' | 'some' | 'noise' | null
+  tools: { ability: string; ability_name: string; agent: string; uses: number }[] | null
+  contest_before: number | null
+  enough: boolean | null
+}
+
+export interface PlanItem {
+  id: string
+  ability_name: string
+  agent: string
+  callout: string
+  x: number
+  y: number
+  u: number
+  v: number
+  k: number
+  n: number
+  p: number
+  strength: Strength
+  advice: 'hit' | 'leave' | 'no_edge' | 'untested'
+  counter: PlanCounter
+}
+
 export interface Scout {
   team: { id: string; name: string }
   sample: Sample
@@ -137,6 +170,7 @@ export interface Scout {
   operator: Operator
   setup: Setup | null
   insights: Finding[]
+  plan: PlanItem[]
   rounds: Record<string, RoundRef>
 }
 

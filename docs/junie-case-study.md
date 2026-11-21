@@ -12,8 +12,10 @@ Junie ran through the Junie CLI, in headless mode, from the project folder. Each
 | 2. Build the scouting brief | 158 s | `scout/brief.py`, a new command, 9 tests |
 | 3. Fix seven review findings | 160 s | 17 tests, brief now matches the app |
 | 4. Fix three more findings | 109 s | 20 tests in `tests/test_brief.py` |
+| 5. Build the game plan (analysis, payload, brief) | 303 s | `game_plan` and 22 tests |
+| 6. Fix six findings, then add it to the web app | 266 s | types, section, styles, help entry |
 
-The whole test suite went from 38 to 58 tests.
+The whole test suite went from 38 to 85 tests.
 
 ## What worked
 
@@ -27,11 +29,20 @@ Junie's first version passed all of its own tests. Run on a real view, it report
 
 The same check on real views found six more problems, for example a utility section 70 lines long and an Operator section that mislabelled one count as another. They became [task 3](junie-tasks/03-brief-review.md). Junie fixed all seven, and over-corrected one: the findings lost their sample size ("45 of defense rounds"). That and two smaller points became [task 4](junie-tasks/04-brief-second-review.md).
 
+## The second feature
+
+Tasks 5 and 6 added the game plan: for a team's defense, which of their setups are worth hitting early, judged by every league round where a defense used that spot. The brief for task 5 applied the lessons above. It named the function to build on, gave the four outcomes and their exact conditions, forbade new thresholds, and asked for the classification to be a small pure function so it could be tested without data.
+
+This time the analysis was right on the first run. A separate script re-derived every advice value from the counter on six real views and all of them matched. What the review found was presentation: the section in the wrong place, two lines a coach could not tell apart, tools listed without their agents, and a cache that handed the same dictionary to every caller. Task 6 fixed those and built the interface.
+
+The interface was the weaker half. Junie reused the existing selection handler as asked, so clicking a row focuses the map and opens the existing counter panel, and the build passed. But it cannot see the page: the rows came out with an upper-case badge and their own box, unlike anything else in the app. Screenshots on desktop, phone and dark mode showed that at once, and the rows were restyled by hand to reuse the finding-row pattern.
+
 ## What it taught
 
 - **Point the agent at the exact source.** "The way the server does" was a wrong pointer, and Junie filled the gap with a plausible guess. Task 3 named the function and the file, and the fix was right the first time.
 - **Passing tests are not a review.** An agent's tests encode the agent's understanding. The check that mattered came from outside: real views compared against the app's own payload after each task.
 - **Ask for the test that would have caught it.** Tasks 3 and 4 asked for the missing tests as well as the fix, so the suite now compares the brief's counts with the app's.
+- **Look at what it cannot see.** A passing build says nothing about how a screen reads. Visual work needs a person looking at screenshots, however precise the brief.
 - **Keep the briefs.** Because every task is a file, the review rounds are part of the repository's history instead of a chat that is gone.
 
-After task 4, a last pass by hand changed wording only. Junie joined after the pipeline, the analysis and the web app were in place; the guidelines and the scouting brief are its work, and the four task files are the complete record of it.
+By hand: wording after task 4, the row styling after task 6, and a three-line change to the export. Junie joined after the pipeline, the analysis and the web app were in place; the guidelines, the scouting brief and the game plan are its work, and the six task files are the complete record of it.

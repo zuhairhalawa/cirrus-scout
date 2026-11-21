@@ -28,6 +28,7 @@ Every claim shows its sample size, how strong the evidence is, and the exact rou
   - kill sightlines from shooter to victim, opening picks highlighted
 - **Setups.** The team's recurring trap and cam setups ("Turret at Mid Boiler: 26 of 51 rounds"), and how predictable they are against every other team on that map.
 - **Counters tested league-wide.** Select a defensive spot and Cirrus checks every round in the data where any defense used it. It compares attack win rates when attackers hit the spot with utility early and when they didn't, with counts and a significance test.
+- **Game plan.** The counters for a team's defense in one list: which of their setups are worth hitting early, which are better left alone, and which show no reliable edge. Each row opens the spot on the map with its numbers.
 - **Evidence and 2D replay.** Every finding lists its rounds: opponent, date, round number, result. One click replays the round: players with trails, every ability where it was cast, kills, plant and defuse.
 - **Self-scouting.** Point it at Cloud9 or Cloud9 GC to see what opponents can read from Cloud9's own habits.
 - **Print brief.** A one-page version for the pre-match meeting.
@@ -101,6 +102,13 @@ Example output (invented names and numbers):
 
 - **Killjoy Turret at B Kitchen** — 30 of 50 defense rounds, strong evidence
 
+## Game plan
+
+- Hit the Killjoy Turret at B Kitchen early (set in 30 of 50 rounds): attackers won 58% (70 of 120) when they did, 46% (230 of 500) when they left it. Clear signal. Common tools: Sova Recon Bolt, KAY/O FRAG/ment.
+- Killjoy Alarmbot at A Main (set in 14 of 50 rounds): no reliable edge either way (410 league rounds).
+
+_This is an association across the league, not proof of cause._
+
 ## Utility
 
 - **Killjoy Turret** at B Kitchen — 30 of 50 rounds, placed by Vexa, buy phase
@@ -125,7 +133,7 @@ Use `--out brief.md` to write to a file.
 python -m pytest
 ```
 
-58 tests. The unit tests run anywhere. The data tests need the processed data and check Cirrus against the source:
+85 tests. The unit tests run anywhere. The data tests need the processed data and check Cirrus against the source:
 
 - every analysed map reproduces its official score
 - every reported spot share is recounted cast by cast, for five team views
@@ -169,14 +177,17 @@ Watch it on YouTube: [youtu.be/7ClDxDkEFhc](https://youtu.be/7ClDxDkEFhc)
 | [02-scouting-brief](docs/junie-tasks/02-scouting-brief.md) | Built the scouting brief: [scout/brief.py](scout/brief.py), the `python -m scout brief` command, [tests/test_brief.py](tests/test_brief.py) and the README section above. |
 | [03-brief-review](docs/junie-tasks/03-brief-review.md) | Fixed seven findings from a review of its first version. The main one: it had used a 30-day window where the app uses six months, so the brief reported 23 rounds where the app reported 84. |
 | [04-brief-second-review](docs/junie-tasks/04-brief-second-review.md) | Fixed three remaining findings and added the tests that should have caught them. |
+| [05-game-plan](docs/junie-tasks/05-game-plan.md) | Built the game plan: the classification and ordering in `scout/analysis.py`, the `plan` key of the payload, the brief section, 22 tests and the methodology section. |
+| [06-game-plan-in-the-app](docs/junie-tasks/06-game-plan-in-the-app.md) | Fixed six review findings on task 5, then added the game plan to the web app: types, the section in the findings column, selection through the existing handler, styles and the help entry. |
 
 How the work was split:
 
 - Junie wrote the code and the tests. Each task ended with Junie running the whole test suite.
 - Each result was then checked outside Junie by running the brief on real views and comparing it with the app's payload. That check, not the passing tests, is what found the problems in tasks 3 and 4. The review files record them as they were written at the time.
-- After the second review, a last pass by hand changed wording only: one sentence form, one error hint, and the invented names in the examples.
+- After the brief's second review, a last pass by hand changed wording only: one sentence form, one error hint, and the invented names in the examples.
+- The game plan's rows in the app were restyled by hand after task 6 to reuse the finding-row pattern; Junie's version worked but looked like a different app. The export also got a three-line change by hand so the hosted demo has the counter for every plan row.
 
-Junie joined after the pipeline, the analysis and the web app were in place. Its work is the guidelines and the scouting brief; the four task files are the complete record of it.
+Junie joined after the pipeline, the analysis and the web app were in place. Its work is the guidelines, the scouting brief and the game plan; the six task files are the complete record of it.
 
 A longer account, including what went wrong and how it was caught, is in [docs/junie-case-study.md](docs/junie-case-study.md).
 

@@ -2,7 +2,7 @@
 
 Cirrus turns the official GRID VALORANT feeds into opponent scouting that a coach can read at a glance, and backs every claim with the rounds it came from. This page explains how each number is produced, how it was checked, and how far it can be trusted.
 
-Every figure on this page was produced by the code in this repository on the data processed on 2026-11-21. `python -m pytest` re-runs the checks described in section 11.
+Every figure on this page was produced by the code in this repository on the data processed on 2026-11-21. `python -m pytest` re-runs the checks described in section 12.
 
 ## 1. The data
 
@@ -37,7 +37,7 @@ Two integrity gates decide what is analysed:
 
 ## 3. The whole buy phase counts, and a re-placed device counts once
 
-Pro rounds often have long buy phases: timeouts, pistol rounds and technical pauses. Setup utility is placed during that time, so every cast from the start of the round is kept. An earlier version cut off casts more than 50 seconds before the round went live, which dropped 28,465 casts and understated setups; an independent recount from the raw files caught it (section 11).
+Pro rounds often have long buy phases: timeouts, pistol rounds and technical pauses. Setup utility is placed during that time, so every cast from the start of the round is kept. An earlier version cut off casts more than 50 seconds before the round went live, which dropped 28,465 casts and understated setups; an independent recount from the raw files caught it (section 12).
 
 A sentinel can pick a device up and place it again before the round starts. Counting both placements would describe a setup that never existed. So:
 
@@ -107,7 +107,20 @@ For a defensive spot, Cirrus finds every round in the data, from any team, where
 
 This is an association across the league, not proof of cause, and the app says so next to every result.
 
-## 9. Evidence strength
+## 9. Game plan
+
+The game plan summarises counters for a team's defense on a map. It considers only trap and sentinel spots with strong or moderate evidence, because those are the setups a team can be expected to repeat. Each spot is classified into exactly one advice value:
+
+| Advice | Condition |
+|---|---|
+| Hit | The counter has enough rounds in both arms, its signal is "clear" or "some", and the delta (attack win rate when contested minus when left) is positive. |
+| Leave | The counter has enough rounds in both arms, its signal is "clear" or "some", and the delta is negative. |
+| No edge | The counter has enough rounds in both arms, but its signal is "noise". |
+| Untested | The counter does not have enough (fewer than 8 rounds in one arm), or it is `None`. |
+
+Items are ordered: "hit" first by z descending, then "leave" by z ascending, then "no_edge", then "untested"; inside the last two groups, the most-used spot comes first. The game plan is only computed for defense views; attack views return an empty list.
+
+## 10. Evidence strength
 
 Every finding carries a plain-language strength, from the lower bound of a 90% Wilson interval on its share and from its sample size:
 
@@ -119,15 +132,15 @@ Every finding carries a plain-language strength, from the lower bound of a 90% W
 
 Every finding lists its rounds: opponent, date, round number, result, and the UTC time the round went live, to find it in the VOD.
 
-## 10. Position accuracy
+## 11. Position accuracy
 
 Movement is sampled every 0.2 s in 1,762 maps, every 0.1 s in 82, and only once per second in 233 (mostly VCT Americas 2025). The rate is measured per map from the supplement, not assumed from the event name.
 
 Where a view includes once-per-second maps, the app says so and shows how far players moved between samples while placing setup utility, which bounds how far a marker can be off. Spots stay tight in practice: MIBR's turret at B Kitchen has a median spread of 0.5 m across 45 rounds.
 
-## 11. How the numbers were checked
+## 12. How the numbers were checked
 
-`python -m pytest` runs 58 tests. The ones that need the data are skipped without it.
+`python -m pytest` runs 85 tests. The ones that need the data are skipped without it.
 
 - **Official scores:** every analysed map reproduces its official score.
 - **Outcomes and sides:** detonations are attacker wins; defuses and time-outs are defender wins.
@@ -139,8 +152,9 @@ Where a view includes once-per-second maps, the app says so and shows how far pl
 - **Counters:** the two arms add up to the total.
 - **Rounding:** a finding, its map marker and its list row always show the same whole percentage.
 - **Subtitles:** the demo video's captions reproduce the narration exactly, in order.
+- **Game plan:** every plan item's counter matches `counter_for_hotspot` for that spot, and every advice value follows the classification rules. Attack views have an empty plan.
 
-## 12. Known limits
+## 13. Known limits
 
 - **No landing points.** Thrown utility shows origin and aim only.
 - **Recall rule.** With two charges, a player who recalls only their first placement is treated as keeping the last two.

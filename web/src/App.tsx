@@ -3,7 +3,7 @@ import { isLive, loadCounter, loadMeta, loadOverview, loadReplay, loadScout } fr
 import { MapView } from './components/MapView'
 import { ReplayFeed, ReplayPlayer } from './components/ReplayPlayer'
 import { CAT_LABEL, CAT_ORDER, GlyphIcon, Icon, Seg, ShareBar, StrengthChip, cap, clock } from './components/ui'
-import type { Counter, Finding, Hotspot, Meta, OpArea, Overview, Phase, Replay, RoundRef, Scout, Side, TeamRow } from './types'
+import type { Counter, Finding, Hotspot, Meta, OpArea, Overview, Phase, PlanItem, Replay, RoundRef, Scout, Side, TeamRow } from './types'
 
 type Mode = 'utility' | 'operator' | 'setup' | 'replay'
 type Period = 'recent' | 'all'
@@ -78,6 +78,63 @@ function FindingRow({ f, active, onClick }: { f: Finding; active: boolean; onCli
   )
 }
 
+function signalWord(signal: string | null | undefined) {
+  if (signal === 'clear') return 'Clear signal'
+  if (signal === 'some') return 'Some signal'
+  return 'Within noise'
+}
+
+function PlanRow({ item, active, onClick }: { item: PlanItem; active: boolean; onClick: () => void }) {
+  const c = item.counter
+  const d = c.delta ?? 0
+  const spot = `${item.agent} ${item.ability_name} at ${item.callout}`
+  return (
+    <li>
+      <button type="button" className="finding" aria-pressed={active} onClick={onClick}>
+        <span className={`finding-pct num plan-delta ${d >= 0 ? 'up' : 'down'}`}>{d >= 0 ? '+' : '−'}{Math.abs(d)}</span>
+        <span className="finding-body">
+          <span className="finding-title">{item.advice === 'hit' ? `Hit the ${spot} early` : `Leave the ${spot} alone`}</span>
+          <span className="finding-sub">
+            Attackers won {c.win_contested}% ({c.won_contested} of {c.contested_rounds?.toLocaleString()}) when they hit it
+            early, {c.win_uncontested}% ({c.won_uncontested} of {c.uncontested_rounds?.toLocaleString()}) when they left it
+          </span>
+          <span className="finding-meta">
+            <span className="signal plan-signal" data-signal={c.signal ?? undefined}>{signalWord(c.signal)}</span>
+            <span className="plan-unit">points of attack win rate</span>
+          </span>
+        </span>
+      </button>
+    </li>
+  )
+}
+
+function GamePlanSection({ plan, activeId, onSelect }: {
+  plan: PlanItem[]; activeId: string | null; onSelect: (item: PlanItem) => void
+}) {
+  const rows = plan.filter((p) => p.advice === 'hit' || p.advice === 'leave')
+  const names = (advice: PlanItem['advice']) =>
+    Array.from(new Set(plan.filter((p) => p.advice === advice).map((p) => `${p.agent} ${p.ability_name} at ${p.callout}`))).join(', ')
+  const noEdge = names('no_edge')
+  const untested = names('untested')
+  return (
+    <section className="game-plan">
+      <h2>Game plan</h2>
+      {rows.length === 0 ? (
+        <p className="plan-note">No setup here has a reliable edge from being hit early.</p>
+      ) : (
+        <ol className="finding-list">
+          {rows.map((item) => (
+            <PlanRow key={item.id} item={item} active={activeId === item.id} onClick={() => onSelect(item)} />
+          ))}
+        </ol>
+      )}
+      {noEdge && <p className="plan-note">No reliable edge either way: {noEdge}.</p>}
+      {untested && <p className="plan-note">Too few league rounds to tell: {untested}.</p>}
+      <p className="plan-note faint">An association across the league, not proof of cause.</p>
+    </section>
+  )
+}
+
 function CounterBlock({ counter, mapName }: { counter: Counter | null | 'loading'; mapName: string }) {
   if (counter === 'loading') return <p className="muted">Checking every round on {mapName} where a defense used this spot.</p>
   if (!counter) return null
@@ -143,6 +200,8 @@ function HelpDialog({ open, onClose, meta }: { open: boolean; onClose: () => voi
         <dd>For each round with an Operator, the one area where its holder spent most of the first 20 seconds.</dd>
         <dt>Counter</dt>
         <dd>For a defensive spot, every round in the data where any team used it. Attack win rate when attackers put recon, damage, flash or stall utility on it in the first 25 seconds, against when they did not.</dd>
+        <dt>Game plan</dt>
+        <dd>For each repeated defensive spot, the counter is tested across the league to see whether hitting it early pays off. "Hit early" means attackers won more when they did; "Leave alone" means they won more when they didn't. The signal shows how reliable the pattern is.</dd>
         <dt>Data</dt>
         <dd>Official GRID match feeds: {ds.series.toLocaleString()} series, {ds.maps.toLocaleString()} maps, {ds.rounds.toLocaleString()} rounds, {ds.range_label}. {ds.excluded_maps > 0 ? `${ds.excluded_maps} map was left out because its rebuilt score did not match the official one. ` : ''}{ds.excluded_rounds > 0 ? `${ds.excluded_rounds} rounds were left out because their result contradicted their sides. ` : ''}Processed {ds.built}.</dd>
       </dl>
@@ -296,6 +355,26 @@ export default function App() {
     }
   }, [activeFinding, clearSelection, scout, selectHotspot])
 
+  const selectPlanItem = useCallback((item: PlanItem) => {
+    // Switch to Utility tab if not already there
+    if (mode !== 'utility') setMode('utility')
+    setView('spots')
+    // Find the matching hotspot and select it
+    const h = scout?.utility.hotspots.find((x) => x.id === item.id)
+    if (h) {
+      selectHotspot(h)
+    } else {
+      // Fallback: focus on the coordinates
+      setFocus({ u: item.u, v: item.v })
+      setActive(null); setActiveArea(null)
+      setEvidence({ title: `${item.agent} ${item.ability_name}, ${item.callout}`, rounds: [] })
+      if (side === 'defense') {
+        setCounter('loading')
+        loadCounter(map ?? '', item.x, item.y, '', item.id).then(setCounter).catch(() => setCounter(null))
+      }
+    }
+  }, [mode, scout, selectHotspot, map, side])
+
   const openRound = useCallback((ref: RoundRef) => {
     setReplayRef(ref)
     setReplayLoading(true)
@@ -416,6 +495,10 @@ export default function App() {
                 </ol>
               )}
             </>
+          )}
+
+          {scout && scout.plan.length > 0 && side === 'defense' && (
+            <GamePlanSection plan={scout.plan} activeId={active?.id ?? null} onSelect={selectPlanItem} />
           )}
 
           {overview && (

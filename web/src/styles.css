@@ -216,6 +216,15 @@ code { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-siz
 .recent li:first-child { border-top: 0; }
 .recent-date { color: var(--ink-3); font-variant-numeric: tabular-nums; }
 
+/* ---------- game plan ---------- */
+.plan-delta { font-size: 20px; line-height: 1.38; }
+.plan-delta.up { color: var(--good); }
+.plan-delta.down { color: var(--bad); }
+.plan-signal { font-size: 13px; }
+.plan-unit { font-size: 13px; color: var(--ink-3); }
+.plan-note { margin-top: 8px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.plan-note.faint { color: var(--ink-3); }
+
 .notice { margin-top: 16px; padding: 12px; border: 1px solid var(--rule); border-radius: var(--r-m); display: grid; gap: 10px; justify-items: start; }
 .skeleton { display: grid; gap: 14px; margin-top: 28px; }
 .skeleton i { height: 62px; border-radius: var(--r-m); background: linear-gradient(90deg, var(--paper), color-mix(in srgb, var(--paper) 60%, var(--panel)), var(--paper)); background-size: 200% 100%; animation: sheen 1.4s linear infinite; }

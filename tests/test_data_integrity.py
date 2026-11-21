@@ -155,6 +155,42 @@ def test_counter_arms_add_up(st):
         assert c["signal"] in ("clear", "some", "noise")
 
 
+def test_game_plan_counter_matches_counter_for_hotspot(st):
+    """For one real defense view, every plan item's counter matches counter_for_hotspot and advice is correct."""
+    team = _team(st, "Sentinels")
+    res = A.scout(team, "lotus", 1)
+    plan = res.get("plan", [])
+    assert isinstance(plan, list)
+    for item in plan:
+        ability = item["id"].split("@")[0]
+        counter = A.counter_for_hotspot("lotus", item["x"], item["y"], ability)
+        # The advice must follow the classification rules
+        if counter is None or not counter.get("enough"):
+            assert item["advice"] == "untested"
+        elif counter.get("signal") in ("clear", "some"):
+            expected = "hit" if counter.get("delta", 0) > 0 else "leave"
+            assert item["advice"] == expected
+        else:
+            assert item["advice"] == "no_edge"
+
+
+def test_attack_view_has_empty_plan(st):
+    """Attack views must have an empty plan list."""
+    team = _team(st, "Cloud9")
+    res = A.scout(team, "lotus", 0)
+    assert res.get("plan") == []
+
+
+def test_scout_payload_keys_unchanged(st):
+    """The existing keys of the payload must still be present."""
+    team = _team(st, "MIBR (1)")
+    res = A.scout(team, "icebox", 1)
+    for key in ("sample", "utility", "operator", "setup", "insights"):
+        assert key in res, f"Missing key: {key}"
+    # New key should also be present
+    assert "plan" in res
+
+
 def test_recount_from_the_raw_grid_files(st):
     """Rebuild one headline number from the raw feed and supplement, without the extractor."""
     import orjson

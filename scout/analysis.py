@@ -673,7 +673,30 @@ CONTEST_BEFORE = 25.0
 MIN_ARM = 8
 
 
+@lru_cache(maxsize=1024)
+def _counter_for_hotspot_cached(map_name: str, x: float, y: float, ability: str):
+    """Memoised wrapper so the same spot is not recomputed in one process."""
+    return _counter_for_hotspot_uncached(map_name, x, y, ability)
+
+
 def counter_for_hotspot(map_name: str, x: float, y: float, ability: str):
+    """League-wide: when defenders set this spot, did attackers who hit it early win more?
+
+    Memoised via ``_counter_for_hotspot_cached`` so repeated calls for the same
+    spot within a process hit the cache. Returns a fresh copy so callers cannot
+    corrupt the cache.
+    """
+    raw = _counter_for_hotspot_cached(map_name, x, y, ability)
+    if raw is None:
+        return None
+    # Return a copy so the cached dict is never mutated by a caller
+    result = dict(raw)
+    if "tools" in result and result["tools"] is not None:
+        result["tools"] = list(result["tools"])
+    return result
+
+
+def _counter_for_hotspot_uncached(map_name: str, x: float, y: float, ability: str):
     """League-wide: when defenders set this spot, did attackers who hit it early win more?"""
     st = store()
     C, R = st.C, st.R
@@ -720,6 +743,88 @@ def counter_for_hotspot(map_name: str, x: float, y: float, ability: str):
         signal="clear" if abs(z) >= 1.96 else "some" if abs(z) >= 1.64 else "noise",
     )
     return out
+
+
+# ---- game plan (summary of counters) ------------------------------------------------
+
+def _classify_advice(counter: dict | None) -> str:
+    """Classify a single counter result into one advice value.
+
+    Pure function — unit-tested with hand-written dictionaries.
+    """
+    if counter is None:
+        return "untested"
+    if not counter.get("enough"):
+        return "untested"
+    signal = counter.get("signal", "noise")
+    delta = counter.get("delta", 0)
+    if signal in ("clear", "some"):
+        return "hit" if delta > 0 else "leave"
+    return "no_edge"
+
+
+def game_plan(map_name: str, hot: dict) -> list[dict]:
+    """For a team's defense on a map, which setups are worth hitting early?
+
+    *``hot``* is the result of ``utility_hotspots`` for a defense view (whole round).
+    Returns one item per qualifying spot with advice and the full counter result.
+    """
+    # Filter to trap/sentinel spots with strong or moderate evidence
+    candidates = [
+        h for h in hot.get("hotspots", [])
+        if h.get("category") in ("trap", "sentinel")
+        and h.get("strength") in ("strong", "moderate")
+    ]
+    if not candidates:
+        return []
+
+    _counter_fields = ("rounds", "contested_rounds", "uncontested_rounds",
+                       "won_contested", "won_uncontested",
+                       "win_contested", "win_uncontested",
+                       "delta", "z", "signal",
+                       "tools", "contest_before", "enough")
+
+    items = []
+    for h in candidates:
+        counter = counter_for_hotspot(map_name, h["x"], h["y"], h["ability"])
+        advice = _classify_advice(counter)
+
+        # Build counter object with None defaults for missing fields
+        if counter is None:
+            counter_obj = {f: None for f in _counter_fields}
+        else:
+            counter_obj = {f: counter.get(f) for f in _counter_fields}
+
+        items.append({
+            "id": h["id"],
+            "ability_name": h["ability_name"],
+            "agent": h["agent"],
+            "callout": h["callout"],
+            "x": h["x"],
+            "y": h["y"],
+            "u": h["u"],
+            "v": h["v"],
+            "k": h["k"],
+            "n": h["n"],
+            "p": h["p"],
+            "strength": h["strength"],
+            "advice": advice,
+            "counter": counter_obj,
+        })
+
+    # Sort: hit by z desc, leave by z asc, no_edge by k desc, untested by k desc
+    advice_order = {"hit": 0, "leave": 1, "no_edge": 2, "untested": 3}
+    items.sort(key=lambda it: (
+        advice_order[it["advice"]],
+        # Within hit: z descending (negate for asc sort)
+        # Within leave: z ascending
+        # Within no_edge/untested: k descending (negate)
+        -(it["counter"].get("z") or 0) if it["advice"] == "hit"
+        else (it["counter"].get("z") or 0) if it["advice"] == "leave"
+        else -it["k"],
+    ))
+
+    return items
 
 
 # ---- team listing + overview -----------------------------------------------------------
@@ -875,5 +980,7 @@ def scout(team: int, map_name: str, side: int, *, phase="all", events=None, sinc
         fp["league"] = league
     # headline findings always describe the whole round, whatever phase filter the map shows
     base = hot if phase == "all" else utility_hotspots(team, map_name, side, events=events, since=since)
+    # game plan only for defense views, computed from whole-round hotspots
+    plan = game_plan(map_name, base) if side == 1 else []
     return {"sample": sample_info(team, map_name, side, since), "utility": hot, "operator": op, "setup": fp,
-            "insights": insights(team, map_name, side, base, op, fp, league)}
+            "insights": insights(team, map_name, side, base, op, fp, league), "plan": plan}

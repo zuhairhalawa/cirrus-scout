@@ -98,7 +98,10 @@ def export_static(team_names: list[str] | None = None, showcase: list[tuple[str,
                     if suffix == "":
                         exported.append({"team": t["id"], "map": m, "side": side})
                     if side == "defense":
-                        for h in res["utility"]["hotspots"][:14]:
+                        planned = {i["id"] for i in res["plan"]}
+                        for n_h, h in enumerate(res["utility"]["hotspots"]):
+                            if n_h >= 14 and h["id"] not in planned:
+                                continue
                             if h["category"] not in ("trap", "sentinel") or h["id"] in counters_done:
                                 continue
                             counters_done.add(h["id"])

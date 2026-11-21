@@ -183,6 +183,14 @@ def render_brief(payload: dict) -> str:
 
         lines.append("")
 
+    # 3a. Game plan — directly after key findings
+    plan = payload.get("plan") or []
+    if plan:
+        lines.append("## Game plan")
+        lines.append("")
+        _append_game_plan(lines, plan)
+        lines.append("")
+
     # 4. Operator
     op_rounds = operator.get("rounds", 0)
     if op_rounds > 0:
@@ -312,3 +320,98 @@ def _append_hotspot_line(lines: list[str], h: dict) -> None:
     if strength_label == "thin":
         line += " *(thin evidence)*"
     lines.append(line)
+
+
+def _signal_word(signal: str | None) -> str:
+    """Plain-language signal label."""
+    if signal == "clear":
+        return "Clear signal"
+    if signal == "some":
+        return "Some signal"
+    return "Within noise"
+
+
+def _fmt_n(n: int | None) -> str:
+    """Format an integer with thousands separators."""
+    if n is None:
+        return ""
+    return f"{n:,}"
+
+
+def _append_game_plan(lines: list[str], plan: list[dict]) -> None:
+    """Append the Game plan section, one line per item."""
+    hit_items = [p for p in plan if p["advice"] == "hit"]
+    leave_items = [p for p in plan if p["advice"] == "leave"]
+    no_edge_items = [p for p in plan if p["advice"] == "no_edge"]
+    untested_items = [p for p in plan if p["advice"] == "untested"]
+
+    for item in hit_items:
+        c = item["counter"]
+        ability_name = item["ability_name"]
+        agent = item["agent"]
+        callout = item["callout"]
+        k = item["k"]
+        n = item["n"]
+        won_c = c.get("won_contested")
+        n_c = c.get("contested_rounds")
+        won_u = c.get("won_uncontested")
+        n_u = c.get("uncontested_rounds")
+        win_c = c.get("win_contested")
+        win_u = c.get("win_uncontested")
+        signal = c.get("signal")
+        tools = c.get("tools")
+        line = (f"- Hit the {agent} {ability_name} at {callout} early "
+                f"(set in {_fmt_n(k)} of {_fmt_n(n)} rounds): "
+                f"attackers won {win_c}% ({won_c} of {_fmt_n(n_c)}) when they did, "
+                f"{win_u}% ({won_u} of {_fmt_n(n_u)}) when they left it. "
+                f"{_signal_word(signal)}.")
+        if tools:
+            tool_names = ", ".join(f"{t['agent']} {t['ability_name']}" for t in tools[:3])
+            line += f" Common tools: {tool_names}."
+        lines.append(line)
+
+    for item in leave_items:
+        c = item["counter"]
+        ability_name = item["ability_name"]
+        agent = item["agent"]
+        callout = item["callout"]
+        k = item["k"]
+        n = item["n"]
+        won_c = c.get("won_contested")
+        n_c = c.get("contested_rounds")
+        won_u = c.get("won_uncontested")
+        n_u = c.get("uncontested_rounds")
+        win_c = c.get("win_contested")
+        win_u = c.get("win_uncontested")
+        signal = c.get("signal")
+        line = (f"- Leave the {agent} {ability_name} at {callout} alone "
+                f"(set in {_fmt_n(k)} of {_fmt_n(n)} rounds): "
+                f"attackers won {win_c}% ({won_c} of {_fmt_n(n_c)}) when they hit it early, "
+                f"{win_u}% ({won_u} of {_fmt_n(n_u)}) when they didn't. "
+                f"{_signal_word(signal)}.")
+        lines.append(line)
+
+    for item in no_edge_items:
+        c = item["counter"]
+        ability_name = item["ability_name"]
+        agent = item["agent"]
+        callout = item["callout"]
+        k = item["k"]
+        n = item["n"]
+        rounds = c.get("rounds")
+        lines.append(
+            f"- {agent} {ability_name} at {callout} (set in {_fmt_n(k)} of {_fmt_n(n)} rounds): "
+            f"no reliable edge either way ({_fmt_n(rounds)} league rounds)."
+        )
+
+    if untested_items:
+        spots = ", ".join(
+            f"{it['agent']} {it['ability_name']} at {it['callout']}" for it in untested_items
+        )
+        lines.append(f"- {spots}: too few league rounds to tell.")
+
+    # Blank line before the closing disclaimer so Markdown does not glue it to the last bullet
+    lines.append("")
+    lines.append(
+        "_This is an association across the league, not proof of cause._"
+    )
