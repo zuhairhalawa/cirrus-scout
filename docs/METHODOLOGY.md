@@ -127,7 +127,7 @@ Where a view includes once-per-second maps, the app says so and shows how far pl
 
 ## 11. How the numbers were checked
 
-`python -m pytest` runs 38 tests. The ones that need the data are skipped without it.
+`python -m pytest` runs 58 tests. The ones that need the data are skipped without it.
 
 - **Official scores:** every analysed map reproduces its official score.
 - **Outcomes and sides:** detonations are attacker wins; defuses and time-outs are defender wins.

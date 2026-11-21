@@ -1,10 +1,14 @@
-"""Command line: python -m scout {extract,build,serve,export,all}"""
+"""Command line: python -m scout {extract,build,serve,export,brief,all}"""
 from __future__ import annotations
 
 import argparse
+import sys
 
 
 def main():
+    # Ensure UTF-8 output on Windows so em-dashes and special characters render correctly
+    if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(prog="scout", description="Cloud9 VALORANT tactical scouting")
     sub = ap.add_subparsers(dest="cmd", required=True)
     ex = sub.add_parser("extract", help="stream every GRID series into the local cache")
@@ -17,6 +21,12 @@ def main():
     exp = sub.add_parser("export", help="write the aggregate-only static demo into web/public/data")
     exp.add_argument("--teams", nargs="*", help="team names to export (default: Cloud9 teams + most-played)")
     sub.add_parser("all", help="extract + build")
+    br = sub.add_parser("brief", help="write a Markdown scouting brief for a team, map, and side")
+    br.add_argument("--team", required=True, help="team name or id (case-insensitive)")
+    br.add_argument("--map", required=True, help="map name")
+    br.add_argument("--side", required=True, choices=["attack", "defense"], help="side to scout")
+    br.add_argument("--period", default="recent", choices=["recent", "all"], help="time window (default: recent)")
+    br.add_argument("--out", default=None, help="write to file instead of stdout")
     a = ap.parse_args()
 
     if a.cmd in ("extract", "all"):
@@ -31,6 +41,15 @@ def main():
     if a.cmd == "export":
         from .export import export_static
         export_static(a.teams)
+    if a.cmd == "brief":
+        from .brief import build_brief
+        text = build_brief(a.team, a.map, a.side, a.period)
+        if a.out:
+            from pathlib import Path
+            Path(a.out).write_text(text, encoding="utf-8")
+            print(f"Wrote {a.out}")
+        else:
+            print(text, end="")
 
 
 if __name__ == "__main__":

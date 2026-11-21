@@ -78,13 +78,50 @@ Set `STL_DATA_DIR` if the data lives somewhere else.
 
 During UI development, run `cd web && npm run dev`; it proxies `/api` to the Python server.
 
+## Scouting brief
+
+Generate a Markdown scouting brief for a team, map, and side — ready to paste into a prep document:
+
+```bash
+python -m scout brief --team MIBR --map icebox --side defense --period all
+```
+
+Example output (invented names and numbers):
+
+```markdown
+# Echo — Icebox (defense)
+
+**Sample:** 50 rounds across 8 maps (Last 6 months, 15 May – 20 Nov 2026)
+
+## Key findings
+
+- **Killjoy Turret at B Kitchen** — 30 of 50 defense rounds, strong evidence
+
+## Utility
+
+- **Killjoy Turret** at B Kitchen — 30 of 50 rounds, placed by Vexa, buy phase
+
+## Operator
+
+- **Buy rate:** 40% (20 of 50 rounds)
+- **Primary holder:** Orin (90% of Operator rounds, 18 rounds)
+- **Opening picks:** 4 of 10 Operator kills
+
+## Setup
+
+- **Recurring setup:** Killjoy Turret at B Kitchen + KAY/O FRAG/ment at A Main — 18 of 50 rounds
+- **Predictability:** 65% of trap and cam placements land on a reused spot
+```
+
+Use `--out brief.md` to write to a file.
+
 ## Tests
 
 ```bash
 python -m pytest
 ```
 
-38 tests. The unit tests run anywhere. The data tests need the processed data and check Cirrus against the source:
+58 tests. The unit tests run anywhere. The data tests need the processed data and check Cirrus against the source:
 
 - every analysed map reproduces its official score
 - every reported spot share is recounted cast by cast, for five team views
@@ -116,6 +153,25 @@ The GRID data is licensed only for this hackathon and must not be redistributed.
 - drives the real UI with Playwright at 1080p
 - mixes the audio and burns in subtitles with ffmpeg
 
+## JetBrains tools
+
+[Junie](https://junie.jetbrains.com/), JetBrains' coding agent, worked on this repository through the Junie CLI (version 26.11.2). Every task it was given is kept in [docs/junie-tasks](docs/junie-tasks), in the order it ran:
+
+| Task | What Junie did |
+|---|---|
+| [01-guidelines](docs/junie-tasks/01-guidelines.md) | Read the codebase and wrote its own project guidelines, [.junie/AGENTS.md](.junie/AGENTS.md): the pipeline, the commands, the data-license rules and the analysis conventions a change must respect. Junie loads this file on every later task. |
+| [02-scouting-brief](docs/junie-tasks/02-scouting-brief.md) | Built the scouting brief: [scout/brief.py](scout/brief.py), the `python -m scout brief` command, [tests/test_brief.py](tests/test_brief.py) and the README section above. |
+| [03-brief-review](docs/junie-tasks/03-brief-review.md) | Fixed seven findings from a review of its first version. The main one: it had used a 30-day window where the app uses six months, so the brief reported 23 rounds where the app reported 84. |
+| [04-brief-second-review](docs/junie-tasks/04-brief-second-review.md) | Fixed three remaining findings and added the tests that should have caught them. |
+
+How the work was split:
+
+- Junie wrote the code and the tests. Each task ended with Junie running the whole test suite.
+- Each result was then checked outside Junie by running the brief on real views and comparing it with the app's payload. That check, not the passing tests, is what found the problems in tasks 3 and 4. The review files record them as they were written at the time.
+- After the second review, a last pass by hand changed wording only: one sentence form, one error hint, and the invented names in the examples.
+
+Junie joined after the pipeline, the analysis and the web app were in place. Its work is the guidelines and the scouting brief; the four task files are the complete record of it.
+
 ## Project layout
 
 | Path | What it is |
@@ -127,6 +183,7 @@ The GRID data is licensed only for this hackathon and must not be redistributed.
 | `scout/replay.py` | 2D replay of one round |
 | `scout/server.py` | Local JSON API + static file server (standard library only) |
 | `scout/export.py` | Aggregate-only static demo export |
+| `scout/brief.py` | Markdown scouting brief generator |
 | `web/` | React + TypeScript front end |
 | `tests/` | Unit tests and data-integrity tests |
 | `video/` | Scripted demo video pipeline |
