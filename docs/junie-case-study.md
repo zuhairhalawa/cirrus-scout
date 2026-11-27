@@ -1,5 +1,7 @@
 # Working with Junie on Cirrus: a short case study
 
+**The one-minute version, as a video:** [Its tests passed. It was still wrong.](https://youtube.com/shorts/m51nOFzyjGg)
+
 Cirrus is a VALORANT scouting tool built on the official GRID data. This is an account of how Junie, JetBrains' coding agent, was used on it, including the part where it got something wrong and how that was caught.
 
 ## The setup

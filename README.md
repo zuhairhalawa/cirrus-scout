@@ -191,7 +191,7 @@ How the work was split:
 
 Junie joined after the pipeline, the analysis and the web app were in place. Its work is the guidelines, the scouting brief, the game plan and the other-weapons summary; the seven task files are the complete record of it.
 
-A longer account, including what went wrong and how it was caught, is in [docs/junie-case-study.md](docs/junie-case-study.md).
+A longer account, including what went wrong and how it was caught, is in [docs/junie-case-study.md](docs/junie-case-study.md), and there is a [one-minute video version](https://youtube.com/shorts/m51nOFzyjGg) made by `video/make_story.py`.
 
 ## Project layout
 
