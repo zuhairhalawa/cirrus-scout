@@ -567,3 +567,88 @@ def test_counter_for_hotspot_returns_copy():
                 assert len(b["tools"]) == 1
     finally:
         _counter_for_hotspot_cached.cache_clear()
+
+
+
+# ---- the other tracked weapons -------------------------------------------------
+
+def _profile(weapon, rounds=40, buy=0, held=0, holders=(), areas=()):
+    """A hand-written `operator_profile` result with only the fields the summary reads."""
+    return {"weapon": weapon, "rounds": rounds, "buy_rounds": buy, "held_rounds": held,
+            "buy_p": A.pct_int(buy, rounds),
+            "holders": [{"player": n, "rounds": c, "p": p, "share": float(p), "agents": []} for n, c, p in holders],
+            "areas": [{"callout": c, "open_k": k, "open_n": 10, "open_p": A.pct_int(k, 10), "k": k + 1, "n": held,
+                       "u": 0.25, "v": 0.75} for c, k in areas]}
+
+
+class TestWeaponRow:
+    def test_row_reads_every_number_from_the_profile(self):
+        p = _profile("outlaw", rounds=40, buy=10, held=12, holders=[("Ana", 7, 70), ("Bo", 3, 30)],
+                     areas=[("A Main", 2), ("Mid", 5)])
+        row = A.weapon_row(p)
+        assert row["weapon"] == "outlaw"
+        assert (row["rounds"], row["buy_rounds"], row["buy_p"], row["held_rounds"]) == (40, 10, 25, 12)
+        assert row["strength"] == A.strength(10, 40)
+        assert row["holder"] == {"player": "Ana", "rounds": 7, "p": 70}
+        assert row["area"] == {"callout": "Mid", "open_k": 5, "open_n": 10, "open_p": 50, "u": 0.25, "v": 0.75}
+
+    def test_no_holder_and_no_opening_area_are_none(self):
+        row = A.weapon_row(_profile("odin", buy=1, held=1, areas=[("Mid", 0)]))
+        assert row["holder"] is None
+        assert row["area"] is None
+
+    def test_an_area_needs_an_opening_round(self):
+        row = A.weapon_row(_profile("marshal", buy=2, held=2, holders=[("Ana", 2, 100)],
+                                    areas=[("A Main", 0), ("B Main", 1)]))
+        assert row["area"]["callout"] == "B Main"
+
+
+class TestWeaponRows:
+    def test_weapons_never_bought_are_left_out(self):
+        rows = A.weapon_rows([_profile("outlaw", buy=0), _profile("marshal", buy=3, held=3), _profile("odin", buy=0)])
+        assert [r["weapon"] for r in rows] == ["marshal"]
+
+    def test_most_bought_comes_first(self):
+        rows = A.weapon_rows([_profile("outlaw", buy=2, held=2), _profile("marshal", buy=9, held=9),
+                              _profile("odin", buy=5, held=5)])
+        assert [r["weapon"] for r in rows] == ["marshal", "odin", "outlaw"]
+
+    def test_equal_buys_keep_the_tracked_order(self):
+        rows = A.weapon_rows([_profile("outlaw", buy=4, held=4), _profile("marshal", buy=4, held=4)])
+        assert [r["weapon"] for r in rows] == ["outlaw", "marshal"]
+
+    def test_nothing_bought_gives_an_empty_list(self):
+        assert A.weapon_rows([_profile("outlaw"), _profile("marshal"), _profile("odin")]) == []
+        assert A.weapon_rows([]) == []
+
+
+class TestBriefOtherWeapons:
+    @staticmethod
+    def _payload(weapons, op_buy=5):
+        payload = _brief_payload()
+        payload["operator"].update({"rounds": 40, "buy_rounds": op_buy, "buy_p": A.pct_int(op_buy, 40)})
+        payload["weapons"] = weapons
+        return payload
+
+    def test_one_line_per_weapon_in_the_operator_section(self):
+        weapons = [A.weapon_row(_profile("outlaw", buy=10, held=12, holders=[("Ana", 7, 70)], areas=[("Mid", 5)])),
+                   A.weapon_row(_profile("odin", buy=3, held=3))]
+        md = render_brief(self._payload(weapons))
+        assert "- **Outlaw:** bought in 10 of 40 rounds, mostly by Ana, opens at Mid (5 of 10 rounds)" in md
+        assert "- **Odin:** bought in 3 of 40 rounds\n" in md
+        operator = md.split("## Operator")[1]
+        assert operator.index("Outlaw") < operator.index("Odin")
+
+    def test_lines_are_added_when_no_operator_was_bought(self):
+        weapons = [A.weapon_row(_profile("marshal", buy=4, held=4, holders=[("Bo", 4, 100)]))]
+        md = render_brief(self._payload(weapons, op_buy=0))
+        assert "No Operator was bought in 40 rounds." in md
+        assert "- **Marshal:** bought in 4 of 40 rounds, mostly by Bo" in md
+
+    def test_empty_list_adds_nothing(self):
+        with_empty = render_brief(self._payload([]))
+        without_key = self._payload([])
+        del without_key["weapons"]
+        assert with_empty == render_brief(without_key)
+        for name in ("Outlaw", "Marshal", "Odin"):
+            assert name not in with_empty

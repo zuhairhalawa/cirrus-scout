@@ -202,6 +202,7 @@ def render_brief(payload: dict) -> str:
 
         if buy_rounds == 0:
             lines.append(f"- No Operator was bought in {op_rounds} rounds.")
+            _append_other_weapons(lines, payload.get("weapons"))
             lines.append("")
         else:
             holders = operator.get("holders", [])
@@ -235,6 +236,7 @@ def render_brief(payload: dict) -> str:
                     f"- **Opening picks:** {opening_kills} of {total_kills} Operator kills"
                 )
 
+            _append_other_weapons(lines, payload.get("weapons"))
             lines.append("")
 
     # 5. Setup fingerprint
@@ -273,6 +275,19 @@ def render_brief(payload: dict) -> str:
 # ---------------------------------------------------------------------------
 # Internals
 # ---------------------------------------------------------------------------
+
+def _append_other_weapons(lines: list[str], weapons: list[dict] | None) -> None:
+    """One line per other tracked weapon: how often it was bought, by whom, and where it opens."""
+    for w in weapons or []:
+        text = f"- **{w['weapon'].capitalize()}:** bought in {w['buy_rounds']} of {w['rounds']} rounds"
+        holder = w.get("holder")
+        if holder:
+            text += f", mostly by {holder['player']}"
+        area = w.get("area")
+        if area:
+            text += f", opens at {area['callout']} ({area['open_k']} of {area['open_n']} rounds)"
+        lines.append(text)
+
 
 def _recent_since(team: int) -> str | None:
     """Return the date string 183 days before the team's last_played date.

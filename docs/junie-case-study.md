@@ -4,7 +4,7 @@ Cirrus is a VALORANT scouting tool built on the official GRID data. This is an a
 
 ## The setup
 
-Junie ran through the Junie CLI, in headless mode, from the project folder. Each task was a Markdown brief in [docs/junie-tasks](junie-tasks), and Junie was told to read the brief and carry it out. The briefs are in the repository exactly as Junie received them.
+For tasks 1 to 6 Junie ran through the Junie CLI, in headless mode, from the project folder. Task 7 ran in JetBrains Air. Each task was a Markdown brief in [docs/junie-tasks](junie-tasks), and Junie was told to read the brief and carry it out. The briefs are in the repository exactly as Junie received them.
 
 | Task | Junie's run time | Result |
 |---|---|---|
@@ -14,8 +14,9 @@ Junie ran through the Junie CLI, in headless mode, from the project folder. Each
 | 4. Fix three more findings | 109 s | 20 tests in `tests/test_brief.py` |
 | 5. Build the game plan (analysis, payload, brief) | 303 s | `game_plan` and 22 tests |
 | 6. Fix six findings, then add it to the web app | 266 s | types, section, styles, help entry |
+| 7. Other tracked weapons (in JetBrains Air) | about 10 minutes, with approvals | summary, payload key, brief lines, Operator tab list, 12 tests |
 
-The whole test suite went from 38 to 85 tests.
+The whole test suite went from 38 to 97 tests.
 
 ## What worked
 
@@ -37,6 +38,14 @@ This time the analysis was right on the first run. A separate script re-derived 
 
 The interface was the weaker half. Junie reused the existing selection handler as asked, so clicking a row focuses the map and opens the existing counter panel, and the build passed. But it cannot see the page: the rows came out with an upper-case badge and their own box, unlike anything else in the app. Screenshots on desktop, phone and dark mode showed that at once, and the rows were restyled by hand to reuse the finding-row pattern.
 
+## The third feature, in Air
+
+Task 7 added the other tracked weapons: the Outlaw, Marshal and Odin next to the Operator. It ran in JetBrains Air instead of the CLI, in the mode where the agent asks before every command. That changed the work. Each command was read before it ran, so the plan was visible step by step: read the brief and the guidelines, measure one view before touching anything, write the summary as a small pure function over the existing Operator profile, test, build, then update the documents.
+
+One approval was refused. Junie wanted to build its test environment on a Python version that cannot install the pinned numpy, and said so itself; it was told which interpreter to use and carried on. Everything else was approved as proposed.
+
+The result needed no review round. A separate script compared 51 summary rows on five teams with the Operator code and all matched, the full suite passed, and the list in the Operator tab reused existing styles, so it looked like the rest of the app. The brief was the reason: it named the function to build on, forbade new numbers, and asked for the cost to be measured (about 12 ms per view).
+
 ## What it taught
 
 - **Point the agent at the exact source.** "The way the server does" was a wrong pointer, and Junie filled the gap with a plausible guess. Task 3 named the function and the file, and the fix was right the first time.
@@ -45,4 +54,4 @@ The interface was the weaker half. Junie reused the existing selection handler a
 - **Look at what it cannot see.** A passing build says nothing about how a screen reads. Visual work needs a person looking at screenshots, however precise the brief.
 - **Keep the briefs.** Because every task is a file, the review rounds are part of the repository's history instead of a chat that is gone.
 
-By hand: wording after task 4, the row styling after task 6, and a three-line change to the export. Junie joined after the pipeline, the analysis and the web app were in place; the guidelines, the scouting brief and the game plan are its work, and the six task files are the complete record of it.
+By hand: wording after task 4, the row styling after task 6, and a three-line change to the export. Nothing in task 7 was changed by hand. Junie joined after the pipeline, the analysis and the web app were in place; the guidelines, the scouting brief, the game plan and the other-weapons summary are its work, and the seven task files are the complete record of it.

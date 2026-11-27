@@ -90,6 +90,8 @@ The aim vectors were checked to be in the same frame as positions: among 2,377 c
 
 Possession tracking is checked against an independent signal: 94.2% of all Operator kills in the data (8,162 of 8,663) were made by a player the tracker says held it that round.
 
+**Other tracked weapons.** The same profile is run for the Outlaw, Marshal and Odin, and each is reduced to one summary row: rounds that start with it (and the share, with the same evidence strength as any other share), its primary holder, and the area where it opens most often. Only weapons bought in at least one round are listed, most bought first. Every number is read from that weapon's profile; the summary adds no threshold and recomputes nothing.
+
 ## 7. Setup fingerprint and predictability
 
 - **Setup:** trap and cam placements still standing when the round goes live, plus any placed in the first 20 seconds.
@@ -140,7 +142,7 @@ Where a view includes once-per-second maps, the app says so and shows how far pl
 
 ## 12. How the numbers were checked
 
-`python -m pytest` runs 85 tests. The ones that need the data are skipped without it.
+`python -m pytest` runs 97 tests. The ones that need the data are skipped without it.
 
 - **Official scores:** every analysed map reproduces its official score.
 - **Outcomes and sides:** detonations are attacker wins; defuses and time-outs are defender wins.
@@ -148,7 +150,7 @@ Where a view includes once-per-second maps, the app says so and shows how far pl
 - **Callouts:** plant clusters resolve to the right site on every map.
 - **Spot shares:** for five team views, every reported spot is recounted cast by cast and must match exactly.
 - **Raw recount:** one headline number (MIBR's turret at B Kitchen on Icebox) is rebuilt from the raw GRID feed and supplement by separate code that does not use the extractor, and must match exactly.
-- **Operator:** possession agrees with kills; opening areas count each round once.
+- **Operator:** possession agrees with kills; opening areas count each round once; every row of the other-weapons summary equals the fields of that weapon's profile.
 - **Counters:** the two arms add up to the total.
 - **Rounding:** a finding, its map marker and its list row always show the same whole percentage.
 - **Subtitles:** the demo video's captions reproduce the narration exactly, in order.

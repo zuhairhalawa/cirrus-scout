@@ -96,6 +96,12 @@ export interface Operator {
   buy_round_ids: number[]
 }
 
+export interface WeaponRow {
+  weapon: string; rounds: number; buy_rounds: number; buy_p: number; held_rounds: number; strength: Strength
+  holder: { player: string; rounds: number; p: number } | null
+  area: { callout: string; open_k: number; open_n: number; open_p: number; u: number; v: number } | null
+}
+
 export interface SetupSpot { id: string; ability_name: string; agent: string; callout: string; u: number; v: number }
 export interface Setup {
   rounds: number; setup_casts: number; predictability: number | null
@@ -171,6 +177,7 @@ export interface Scout {
   setup: Setup | null
   insights: Finding[]
   plan: PlanItem[]
+  weapons?: WeaponRow[]
   rounds: Record<string, RoundRef>
 }
 

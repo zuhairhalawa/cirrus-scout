@@ -737,6 +737,27 @@ export default function App() {
                   </dl>
                 </>
               )}
+              {scout?.weapons && (
+                <>
+                  <h3>Other tracked weapons</h3>
+                  {scout.weapons.length > 0 ? (
+                    <ul className="plain-list">
+                      {scout.weapons.map((w) => (
+                        <li key={w.weapon}>
+                          <span><strong>{cap(w.weapon)}</strong></span>
+                          <span className="muted">
+                            <span className="num">{w.buy_rounds} of {w.rounds}</span> rounds
+                            {w.holder && `, mostly ${w.holder.player}`}
+                            {w.area && `, opens at ${w.area.callout}`}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="muted">None of the other tracked weapons was bought here.</p>
+                  )}
+                </>
+              )}
             </>
           )}
 

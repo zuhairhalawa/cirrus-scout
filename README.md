@@ -26,6 +26,7 @@ Every claim shows its sample size, how strong the evidence is, and the exact rou
   - where the Operator opens (the first 20 seconds), with each round counted once
   - share of sightings by round time (0–20 s, 20–40 s, 40 s+), labelled aggressive, on-site or passive
   - kill sightlines from shooter to victim, opening picks highlighted
+- **Other tracked weapons.** A short list of the Outlaw, Marshal and Odin bought on the map: rounds bought, who carries it and where it opens, in the Operator tab and the print brief.
 - **Setups.** The team's recurring trap and cam setups ("Turret at Mid Boiler: 26 of 51 rounds"), and how predictable they are against every other team on that map.
 - **Counters tested league-wide.** Select a defensive spot and Cirrus checks every round in the data where any defense used it. It compares attack win rates when attackers hit the spot with utility early and when they didn't, with counts and a significance test.
 - **Game plan.** The counters for a team's defense in one list: which of their setups are worth hitting early, which are better left alone, and which show no reliable edge. Each row opens the spot on the map with its numbers.
@@ -133,7 +134,7 @@ Use `--out brief.md` to write to a file.
 python -m pytest
 ```
 
-85 tests. The unit tests run anywhere. The data tests need the processed data and check Cirrus against the source:
+97 tests. The unit tests run anywhere. The data tests need the processed data and check Cirrus against the source:
 
 - every analysed map reproduces its official score
 - every reported spot share is recounted cast by cast, for five team views
@@ -169,7 +170,7 @@ Watch it on YouTube: [youtu.be/clxpxR6joXM](https://youtu.be/clxpxR6joXM)
 
 ## JetBrains tools
 
-[Junie](https://junie.jetbrains.com/), JetBrains' coding agent, worked on this repository through the Junie CLI (version 26.11.2). Every task it was given is kept in [docs/junie-tasks](docs/junie-tasks), in the order it ran:
+[Junie](https://junie.jetbrains.com/), JetBrains' coding agent, worked on this repository: tasks 1 to 6 through the Junie CLI (version 26.11.2), and task 7 inside [JetBrains Air](https://www.jetbrains.com/air/), with each of its commands approved one by one. Every task it was given is kept in [docs/junie-tasks](docs/junie-tasks), in the order it ran:
 
 | Task | What Junie did |
 |---|---|
@@ -179,6 +180,7 @@ Watch it on YouTube: [youtu.be/clxpxR6joXM](https://youtu.be/clxpxR6joXM)
 | [04-brief-second-review](docs/junie-tasks/04-brief-second-review.md) | Fixed three remaining findings and added the tests that should have caught them. |
 | [05-game-plan](docs/junie-tasks/05-game-plan.md) | Built the game plan: the classification and ordering in `scout/analysis.py`, the `plan` key of the payload, the brief section, 22 tests and the methodology section. |
 | [06-game-plan-in-the-app](docs/junie-tasks/06-game-plan-in-the-app.md) | Fixed six review findings on task 5, then added the game plan to the web app: types, the section in the findings column, selection through the existing handler, styles and the help entry. |
+| [07-other-weapons](docs/junie-tasks/07-other-weapons.md) | Run in JetBrains Air. Added the other tracked weapons (Outlaw, Marshal, Odin): a summary built from the existing Operator profile, the `weapons` key of the payload, lines in the brief, a list in the Operator tab, 12 tests and the methodology paragraph. It measured the cost first: about 12 ms per view. |
 
 How the work was split:
 
@@ -187,7 +189,7 @@ How the work was split:
 - After the brief's second review, a last pass by hand changed wording only: one sentence form, one error hint, and the invented names in the examples.
 - The game plan's rows in the app were restyled by hand after task 6 to reuse the finding-row pattern; Junie's version worked but looked like a different app. The export also got a three-line change by hand so the hosted demo has the counter for every plan row.
 
-Junie joined after the pipeline, the analysis and the web app were in place. Its work is the guidelines, the scouting brief and the game plan; the six task files are the complete record of it.
+Junie joined after the pipeline, the analysis and the web app were in place. Its work is the guidelines, the scouting brief, the game plan and the other-weapons summary; the seven task files are the complete record of it.
 
 A longer account, including what went wrong and how it was caught, is in [docs/junie-case-study.md](docs/junie-case-study.md).
 

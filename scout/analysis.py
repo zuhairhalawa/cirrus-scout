@@ -22,7 +22,7 @@ import numpy as np
 
 from .abilities import CATEGORY_LABELS, SPATIAL, info
 from .build import to_uv
-from .config import DERIVED_DIR, STORE_PATH
+from .config import DERIVED_DIR, STORE_PATH, TRACKED_WEAPONS
 
 HOTSPOT_RADIUS = 450.0        # 4.5 m: casts this close count as "the same spot"
 SETUP_END = 20.0              # setup phase: the buy phase plus the first 20 s
@@ -589,6 +589,38 @@ def operator_profile(team: int, map_name: str, side: int, *, weapon="operator", 
     return out
 
 
+# ---- the other tracked weapons -------------------------------------------------------
+def weapon_row(profile: dict) -> dict:
+    """One compact summary row from an `operator_profile` result. Every number is read from the profile."""
+    holders = profile.get("holders") or []
+    holder = None
+    if holders:
+        h = holders[0]
+        holder = {"player": h["player"], "rounds": h["rounds"], "p": h["p"]}
+    opening = [a for a in profile.get("areas") or [] if a["open_k"] > 0]
+    area = None
+    if opening:
+        a = max(opening, key=lambda a: a["open_k"])
+        area = {"callout": a["callout"], "open_k": a["open_k"], "open_n": a["open_n"], "open_p": a["open_p"],
+                "u": a["u"], "v": a["v"]}
+    return {"weapon": profile["weapon"], "rounds": profile["rounds"], "buy_rounds": profile["buy_rounds"],
+            "buy_p": profile["buy_p"], "strength": strength(profile["buy_rounds"], profile["rounds"]),
+            "held_rounds": profile["held_rounds"], "holder": holder, "area": area}
+
+
+def weapon_rows(profiles: list[dict]) -> list[dict]:
+    """Summary rows for the weapons that were bought at least once, most bought first."""
+    rows = [weapon_row(p) for p in profiles if p["buy_rounds"] > 0]
+    rows.sort(key=lambda r: -r["buy_rounds"])
+    return rows
+
+
+def weapon_summary(team: int, map_name: str, side: int, *, events=None, since=None) -> list[dict]:
+    """The tracked weapons other than the Operator, each as one compact row (see `weapon_row`)."""
+    return weapon_rows([operator_profile(team, map_name, side, weapon=w, events=events, since=since)
+                        for w in TRACKED_WEAPONS if w != "operator"])
+
+
 # ---- setup fingerprint + predictability --------------------------------------------
 def setup_fingerprint(team: int, map_name: str, side: int = 1, *, events=None, since=None):
     """How often does the team repeat the same trap and cam setup?"""
@@ -983,4 +1015,5 @@ def scout(team: int, map_name: str, side: int, *, phase="all", events=None, sinc
     # game plan only for defense views, computed from whole-round hotspots
     plan = game_plan(map_name, base) if side == 1 else []
     return {"sample": sample_info(team, map_name, side, since), "utility": hot, "operator": op, "setup": fp,
-            "insights": insights(team, map_name, side, base, op, fp, league), "plan": plan}
+            "insights": insights(team, map_name, side, base, op, fp, league), "plan": plan,
+            "weapons": weapon_summary(team, map_name, side, events=events, since=since)}

@@ -16,7 +16,7 @@ Pipeline: `extract.py` (stream GRID .jsonl.zst files) → `build.py` (columnar s
 - **Export demo data:** `python -m scout export` → writes to `web/public/data/`
 - **Web dev mode:** `cd web && npm run dev` (proxies `/api` to Python server)
 - **Web production build:** `cd web && npm run build` → `web/dist/`
-- **Tests:** `python -m pytest` (85 tests; unit tests run anywhere, data tests need the built store)
+- **Tests:** `python -m pytest` (97 tests; unit tests run anywhere, data tests need the built store)
 - **CI workflow:** `.github/workflows/demo.yml` — fetches data, runs unit tests, extracts, builds, runs all tests, exports, builds web, deploys to GitHub Pages.
 
 ## 3. Data rules

@@ -191,6 +191,46 @@ def test_scout_payload_keys_unchanged(st):
     assert "plan" in res
 
 
+def test_weapon_summary_rows_equal_their_profiles(st):
+    """Every summary row is the matching `operator_profile` fields."""
+    from scout.config import TRACKED_WEAPONS
+    others = set(TRACKED_WEAPONS) - {"operator"}
+    team = _team(st, "Cloud9")
+    for map_name, side in (("lotus", 1), ("lotus", 0)):
+        rows = A.weapon_summary(team, map_name, side)
+        assert [r["buy_rounds"] for r in rows] == sorted((r["buy_rounds"] for r in rows), reverse=True)
+        assert {r["weapon"] for r in rows} <= others
+        for row in rows:
+            p = A.operator_profile(team, map_name, side, weapon=row["weapon"])
+            assert row["buy_rounds"] > 0
+            assert (row["rounds"], row["buy_rounds"], row["buy_p"], row["held_rounds"]) == \
+                (p["rounds"], p["buy_rounds"], p["buy_p"], p["held_rounds"])
+            assert row["strength"] == A.strength(p["buy_rounds"], p["rounds"])
+            if p["holders"]:
+                assert row["holder"] == {k: p["holders"][0][k] for k in ("player", "rounds", "p")}
+            else:
+                assert row["holder"] is None
+            opening = [a for a in p["areas"] if a["open_k"] > 0]
+            if opening:
+                assert row["area"]["open_k"] == max(a["open_k"] for a in opening)
+                a = next(a for a in opening if a["callout"] == row["area"]["callout"])
+                for k in ("open_k", "open_n", "open_p", "u", "v"):
+                    assert row["area"][k] == a[k]
+            else:
+                assert row["area"] is None
+        for w in others - {r["weapon"] for r in rows}:     # a weapon that is not listed was never bought
+            assert A.operator_profile(team, map_name, side, weapon=w)["buy_rounds"] == 0
+
+
+def test_weapons_key_is_added_for_both_sides_and_nothing_else_changes(st):
+    team = _team(st, "Cloud9")
+    for side in (1, 0):
+        res = A.scout(team, "lotus", side)
+        assert res["weapons"] == A.weapon_summary(team, "lotus", side)
+        assert set(res) == {"sample", "utility", "operator", "setup", "insights", "plan", "weapons"}
+        assert res["operator"]["weapon"] == "operator"
+
+
 def test_recount_from_the_raw_grid_files(st):
     """Rebuild one headline number from the raw feed and supplement, without the extractor."""
     import orjson
