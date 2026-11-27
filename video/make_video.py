@@ -321,6 +321,9 @@ def storyboard(meta) -> list[Scene]:
     n_hit = sum(1 for i in plan if i["advice"] == "hit")
     n_flat = len({(i["agent"], i["ability_name"], i["callout"]) for i in plan if i["advice"] == "no_edge"})
     assert n_hit and plan[0]["id"] == shear["id"], "the game plan scene needs the Shear as its first row"
+    wep = sen_s["weapons"][0]
+    assert wep["holder"], "the weapons scene needs a weapon with a holder"
+    article = lambda w: "an" if w[0] in "aeiou" else "a"
     words = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six"}
     hit_line = f"{words.get(n_hit, n_hit)} {'is' if n_hit == 1 else 'are'} worth hitting early."
     flat_line = (f" {words.get(n_flat, n_flat)} {'shows' if n_flat == 1 else 'show'} no reliable edge either way."
@@ -379,6 +382,14 @@ def storyboard(meta) -> list[Scene]:
         await hover(page, page.locator(".game-plan .finding"), 4.0)
         await hover(page, page.locator(".game-plan .plan-note"), 2.0)
 
+    async def s_weapons(page):
+        await label(page, "Other tracked weapons")
+        await move_click(page, page.locator(".tab", has_text="Operator"))
+        await page.locator(".area-list").wait_for(timeout=30000)
+        await asyncio.sleep(1.0)
+        await hover(page, page.locator("h3", has_text="Other tracked weapons"), 1.5)
+        await hover(page, page.locator("h3", has_text="Other tracked weapons").locator("xpath=following-sibling::ul[1]/li[1]"), 5.0)
+
     async def s_mirror(page):
         await label(page, "Self-scout Cloud9")
         await hover(page, page.locator(".select"))
@@ -423,6 +434,9 @@ def storyboard(meta) -> list[Scene]:
               f"{num(ctr['win_uncontested'])} percent. {signal}", s_counter),
         Scene("s4b", "", f"The game plan runs that test on every setup Sentinels repeat. {hit_line}{flat_line} "
               "So a coach knows where to spend utility, and where not to.", s_plan),
+        Scene("s4c", "", f"And it is not only the Operator. Sentinels start with {article(wep['weapon'])} {wep['weapon'].capitalize()} in "
+              f"{wep['buy_rounds']} of their {wep['rounds']} defense rounds here, mostly {wep['holder']['player']}"
+              + (f", opening at {wep['area']['callout']}." if wep["area"] else "."), s_weapons),
         Scene("s5", "", f"And it works as a mirror. Cloud9's own turret sits at {c9t['callout']} in {c9t['p']} percent of "
               f"Icebox defense rounds. {fp['predictability']} percent of their trap placements land on a spot they reuse, "
               "shown here against every other team on the map.", s_mirror),

@@ -13,7 +13,7 @@ Every claim shows its sample size, how strong the evidence is, and the exact rou
 
 **Try it:** [zuhairhalawa.github.io/cirrus-scout](https://zuhairhalawa.github.io/cirrus-scout/) (hosted demo, aggregate statistics only)
 
-**Watch the 2-minute demo:** [youtu.be/clxpxR6joXM](https://youtu.be/clxpxR6joXM)
+**Watch the demo (2:30):** [youtu.be/CmnCiIJSmDE](https://youtu.be/CmnCiIJSmDE)
 
 ![Cirrus showing a league-wide counter test for a Vyse Shear at C Main on Lotus](docs/screenshots/counter.png)
 
@@ -158,7 +158,7 @@ The GRID data is licensed only for this hackathon and must not be redistributed.
 
 ## Demo video
 
-Watch it on YouTube: [youtu.be/clxpxR6joXM](https://youtu.be/clxpxR6joXM)
+Watch it on YouTube: [youtu.be/CmnCiIJSmDE](https://youtu.be/CmnCiIJSmDE)
 
 `video/make_video.py` produces the demo video from the running app:
 
